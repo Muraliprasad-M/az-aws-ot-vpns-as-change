@@ -1,0 +1,9 @@
+/usr/bin/bash --noprofile --norc /home/vsts/work/_temp/cd116f1d-2162-4ad3-b88d-33f761390c13.sh
+╷
+│ Error: Unsupported argument
+│ 
+│   on main.tf line 44, in module "it_network":
+│   44:   vpn_ecmp_support      = false
+│ 
+│ An argument named "vpn_ecmp_support" is not expected here.
+╵
