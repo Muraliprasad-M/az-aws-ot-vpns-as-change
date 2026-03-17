@@ -1,0 +1,75 @@
+trigger:
+  branches:
+    include:
+      - '*'
+
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: pipeline-templates
+      ref: refs/tags/v1.1.1
+
+pool:
+    vmImage: ubuntu-latest
+
+stages:
+# ==========================================
+# VALIDATION STAGE
+# ==========================================
+
+- stage: Validate
+  displayName: 'Code Validation'
+  jobs:
+    - job: CodeValidation
+      steps:
+        - template: stages/code-validation-stage.yml@templates
+
+# ==========================================
+# TERRAFORM PLAN STAGE
+# ==========================================
+
+- stage: Plan
+  displayName: 'Terraform Plan'
+  dependsOn: Validate
+  condition: succeeded()
+  jobs:
+    - job: TerraformPlan
+      steps:
+        - template: stages/terraform-plan-stage.yml@templates
+          parameters:
+            tfStateBucket: 'st-network-prod-euw2-tfstate-eyqwgt'
+            tfStateKey: 'core-network-ot-az-vpn/terraform.tfstate'
+            tfStateLock: 'st-network-prod-euw2-tfstate-lock'
+            awsServiceConnection: 'aws-core-network'
+            roleArn: 'arn:aws:iam::732822664028:role/TerraformExecutionRole'
+
+# ==========================================
+# TERRAFORM APPLY STAGE
+# ==========================================
+
+- stage: Apply
+  displayName: 'Terraform Apply'
+  dependsOn: Plan
+  jobs:
+    - deployment: ApplyDeployment
+      displayName: "Run terraform apply"
+      environment: 'ManualApply'
+      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'main'))
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - checkout: self
+              - template: stages/terraform-apply-stage.yml@templates
+                parameters:
+                  tfStateBucket: 'st-network-prod-euw2-tfstate-eyqwgt'
+                  tfStateKey: 'core-network-ot-az-vpn/terraform.tfstate'
+                  tfStateLock: 'st-network-prod-euw2-tfstate-lock'
+                  awsServiceConnection: 'aws-core-network'
+                  roleArn: 'arn:aws:iam::732822664028:role/TerraformExecutionRole'
+
+
+
+
+

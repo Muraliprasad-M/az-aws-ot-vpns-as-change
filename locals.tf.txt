@@ -1,0 +1,28 @@
+locals {
+  name_prefix = "${var.env}-${var.domain}"
+
+  common_tags = merge(
+    {
+      Environment = var.env
+      Domain      = var.domain
+      ManagedBy   = "Terraform"
+    },
+    var.tags
+  )
+
+  cgw_ips = var.cgw_public_ips
+}
+# locals {
+#   name_prefix = "${var.domain}-${var.env}"
+#   cgw_ips     = var.cgw_public_ips
+#   common_tags = merge(var.tags, {
+#     Environment = var.env,
+#     Domain      = var.domain,
+#     ManagedBy   = "terraform"
+#   })
+# }
+# reference local st std 
+# Helper: convert region to short form
+  # eu-west-1a -> euw1a | eu-west-2 -> euw2
+  #short_region    = replace(var.primary_region, "/^([a-z]{2})-([a-z])[a-z]+-([0-9]+)([a-z]?)$/", "$1$2$3$4")
+  #short_dr_region = replace(var.secondary_region, "/^([a-z]{2})-([a-z])[a-z]+-([0-9]+)([a-z]?)$/", "$1$2$3$4")

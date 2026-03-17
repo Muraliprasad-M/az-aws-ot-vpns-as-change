@@ -1,0 +1,1 @@
+output "vpn" { value = aws_vpn_connection.vpn }

@@ -1,0 +1,52 @@
+
+#provider "aws" { region = var.aws_region }
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
+  transit_gateway_id = var.existing_tgw_id
+  vpc_id             = var.vpc_id
+  subnet_ids         = var.tgw_subnet_ids
+  dns_support        = "enable"
+  ipv6_support       = "disable"
+    ############################################
+  # Enable CloudWatch Logging
+  ############################################
+  tunnel1_log_options {
+    cloudwatch_log_options {
+      log_enabled       = true
+      log_group_arn     = aws_cloudwatch_log_group.vpn_logs.arn
+      log_output_format = "json"
+    }
+  }
+
+  tunnel2_log_options {
+    cloudwatch_log_options {
+      log_enabled       = true
+      log_group_arn     = aws_cloudwatch_log_group.vpn_logs.arn
+      log_output_format = "json"
+    }
+  }
+  tags               = merge(local.common_tags, { Name = "${local.name_prefix}-tgw-att" })
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "rtb_assoc" {
+  transit_gateway_route_table_id = var.existing_tgw_rtb_id
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this.id
+}
+
+resource "aws_customer_gateway" "cgw" {
+  for_each   = { for i, ip in local.cgw_ips : i => ip }
+  bgp_asn    = var.cgw_bgp_asn
+  ip_address = each.value
+  type       = "ipsec.1"
+  tags       = merge(local.common_tags, { Name = "${local.name_prefix}-cgw-${each.key}" })
+}
+
+# ECMP DISABLED = static_routes_only = true
+resource "aws_vpn_connection" "vpn" {
+  for_each            = aws_customer_gateway.cgw
+  transit_gateway_id  = var.existing_tgw_id
+  customer_gateway_id = each.value.id
+  type                = "ipsec.1"
+  static_routes_only  = true
+  tags                = merge(local.common_tags, { Name = "${local.name_prefix}-vpn-${each.key}" })
+}

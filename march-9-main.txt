@@ -1,0 +1,158 @@
+############################################
+# Customer Gateway
+############################################
+
+resource "aws_customer_gateway" "cgw" {
+  for_each = local.vpn_connections
+
+  bgp_asn    = var.cgw_bgp_asn
+  ip_address = each.value.ip
+  type       = "ipsec.1"
+
+  tags = merge(
+    var.tags,
+    {
+      # Dynamically uses st or ot based on var.domain and appends the key (vpn-0, vpn-1)
+      Name = format("%s-network-ss-vpn-azgw1-%s", var.domain, each.key)
+    }
+  )
+}
+
+############################################
+# VPN Connection
+############################################
+resource "aws_vpn_connection" "vpn" {
+  for_each = aws_customer_gateway.cgw
+
+  customer_gateway_id = each.value.id
+  transit_gateway_id  = var.tgw_id
+  type                = "ipsec.1"
+  static_routes_only  = false # Enables BGP as per your plan
+  tags = merge(
+    var.tags,
+    {
+      # Dynamically uses st or ot based on var.domain and appends the key (vpn-0, vpn-1)
+      Name = format("%s-network-ss-vpn-azure-%s", var.domain, each.key)
+    }
+  )
+}
+
+############################################
+# TGW Associations & Propagations
+############################################
+
+resource "aws_ec2_transit_gateway_route_table_association" "vpn_assoc" {
+  for_each = aws_vpn_connection.vpn
+
+  transit_gateway_attachment_id  = each.value.transit_gateway_attachment_id
+  transit_gateway_route_table_id = var.tgw_rtb_id
+  replace_existing_association   = "true"
+}
+
+resource "aws_ec2_transit_gateway_route_table_propagation" "vpn_prop" {
+  for_each = aws_vpn_connection.vpn
+
+  transit_gateway_attachment_id  = each.value.transit_gateway_attachment_id
+  transit_gateway_route_table_id = var.tgw_rtb_id
+
+}
+resource "aws_ec2_transit_gateway" "main" {
+  default_route_table_association = "disable"
+  default_route_table_propagation = "disable"
+}
+
+############################################
+# Create Cloudwatch log for VPN Tunnel Logs
+############################################
+
+
+resource "aws_cloudwatch_log_group" "vpn_tunnel_logs" {
+  for_each = local.vpn_connections
+
+  name              = "/aws/vpn/${each.key}/tunnel-vpn-log"
+  retention_in_days = 365
+  kms_key_id        = "arn:aws:kms:eu-west-2:732822664028:key/6bdb429b-1b63-4f69-9720-b2b1201760ce"
+
+  tags = merge(
+    var.tags,
+    { Name = "vpn-${each.key}-tunnel-log" }
+  )
+}
+
+
+############################################
+# Create Cloudwatch log for VPN BGP Logs
+############################################
+
+
+resource "aws_cloudwatch_log_group" "vpn_bgp_logs" {
+  for_each = local.vpn_connections
+
+  name              = "/aws/vpn/${each.key}/tunnel-bgp-log"
+  retention_in_days = 365
+  kms_key_id        = "arn:aws:kms:eu-west-2:732822664028:key/6bdb429b-1b63-4f69-9720-b2b1201760ce"
+
+  tags = merge(
+    var.tags,
+    { Name = "vpn-${each.key}-bgp-log" }
+  )
+}
+
+
+# ############################################
+# # Customer Gateway
+# ############################################
+# resource "aws_customer_gateway" "cgw" {
+
+#   for_each = local.vpn_connections
+
+#   bgp_asn    = var.cgw_bgp_asn
+#   ip_address = each.value.ip
+#   type       = "ipsec.1"
+
+#   tags = merge(
+#     var.tags,
+#     {
+
+#       Name = var.domain == "st" ? "st-network-prod-euw2-cgw" : "st-network-prod-euw2-cgw${each.key == "vpn-0" ? "1" : "2"}"
+#     }
+#   )
+# }
+
+# ############################################
+# # VPN Connection
+# ############################################
+
+# resource "aws_vpn_connection" "vpn" {
+
+#   for_each = aws_customer_gateway.cgw
+
+#   customer_gateway_id = each.value.id
+#   transit_gateway_id  = var.tgw_id
+#   type                = "ipsec.1"
+
+#   static_routes_only = false
+
+#   tags = merge(
+#     var.tags,
+#     {
+#       Name = var.domain == "st" ? "st-network-prod-euw2-vpn" : "st-network-prod-euw2-vpn${each.key == "vpn-0" ? "1" : "2"}"
+#     }
+#   )
+# }
+
+# resource "aws_ec2_transit_gateway_route_table_association" "vpn_assoc" {
+
+#   for_each = aws_vpn_connection.vpn
+
+#   transit_gateway_attachment_id  = each.value.transit_gateway_attachment_id
+#   transit_gateway_route_table_id = var.tgw_rtb_id
+# }
+
+# resource "aws_ec2_transit_gateway_route_table_propagation" "vpn_prop" {
+
+#   for_each = aws_vpn_connection.vpn
+
+#   transit_gateway_attachment_id  = each.value.transit_gateway_attachment_id
+#   transit_gateway_route_table_id = var.tgw_rtb_id
+# }

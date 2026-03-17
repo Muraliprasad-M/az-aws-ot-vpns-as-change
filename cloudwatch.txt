@@ -1,0 +1,15 @@
+############################################
+# CloudWatch Log Group for VPN
+############################################
+resource "aws_cloudwatch_log_group" "vpn_logs" {
+
+  name              = "/aws/vpn/${var.domain}-vpn-logs"
+  retention_in_days = 365
+
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.domain}-vpn-logs"
+    }
+  )
+}

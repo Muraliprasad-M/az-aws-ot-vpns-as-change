@@ -1,0 +1,3 @@
+data "aws_kms_alias" "primary" {
+  name = "alias/st-network-prod-euw2-kms-key"
+}

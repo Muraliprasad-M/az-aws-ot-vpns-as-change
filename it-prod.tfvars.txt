@@ -1,0 +1,11 @@
+
+aws_region          = "eu-west-2"
+env                 = "prod"
+domain              = "IT"
+existing_tgw_id     = "tgw-0197ed40c5a15e3dd"
+existing_tgw_rtb_id = "tgw-rtb-0fcd388babc3a0240"
+vpc_id              = "vpc-0f88c9baaa557c312"
+tgw_subnet_ids      = ["subnet-0c51accf898302ac3", "subnet-0d601cef22549f2e6", "subnet-0e014cbeae438f221"]
+cgw_public_ips      = ["52.169.226.10"]
+cgw_bgp_asn         = 2009
+tags                = { project = "corenetwork", domain = "IT" }

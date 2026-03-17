@@ -1,0 +1,64 @@
+variable "aws_region" {
+  type    = string
+  default = "eu-west-2"
+
+}
+
+variable "env" {
+  type = string
+}
+
+variable "domain" {
+  type = string
+}
+
+variable "vpc_id" {
+  type = string
+}
+
+variable "tgw_subnet_ids" {
+  type = list(string)
+}
+
+variable "existing_tgw_id" {
+  type = string
+}
+
+variable "existing_tgw_rtb_id" {
+  type = string
+}
+
+variable "cgw_public_ips" {
+  type = list(string)
+}
+
+variable "cgw_bgp_asn" {
+  type = number
+}
+
+variable "vpn_tunnel_inside_cidrs" {
+  type    = list(string)
+  default = []
+}
+
+variable "vpn_tunnel_psk" {
+  type    = string
+  default = null
+}
+
+variable "tags" {
+  type    = map(string)
+  default = {}
+}
+# variable "aws_region" {}
+# variable "env" {}
+# variable "domain" {}
+# variable "vpc_id" {}
+# variable "tgw_subnet_ids" {}
+# variable "existing_tgw_id" {}
+# variable "existing_tgw_rtb_id" {}
+# variable "cgw_public_ips" {}
+# variable "cgw_bgp_asn" {}
+# variable "vpn_tunnel_inside_cidrs" { default = [] }
+# variable "vpn_tunnel_psk" { default = null }
+# variable "tags" { default = {} }
