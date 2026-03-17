@@ -7,3 +7,125 @@
 │ 
 │ An argument named "vpn_ecmp_support" is not expected here.
 ╵
+module "it_network" {
+  source = "git::https://severntrent@dev.azure.com/severntrent/aws/_git/core-network-tf-module?ref=v1.0.2"
+
+  name               = var.it_prefix
+  environment        = "prod"
+  primary_region     = var.primary_region
+  encryption_key_arn = data.aws_kms_alias.primary.target_key_arn
+  secondary_region   = var.secondary_region
+
+
+  spoke_network_cidr = [var.it_spokes_supernet_cidr]
+  vpc_cidr           = "10.232.0.0/22"
+  availability_zones = ["eu-west-2a", "eu-west-2b", "eu-west-2c"]
+
+  firewall_subnet_cidrs       = ["10.232.0.128/28", "10.232.1.128/28", "10.232.2.128/28"]
+  tgw_attachment_subnet_cidrs = ["10.232.0.144/28", "10.232.1.144/28", "10.232.2.144/28"]
+  egress_subnet_cidrs         = ["10.232.0.160/28", "10.232.1.160/28", "10.232.2.160/28"]
+  endpoint_subnet_cidrs       = ["10.232.0.0/25", "10.232.1.0/25", "10.232.2.0/25"]
+
+  endpoints = [
+    "com.amazonaws.eu-west-2.s3",
+    "com.amazonaws.eu-west-2.dynamodb",
+    "com.amazonaws.eu-west-2.sts",
+    "com.amazonaws.eu-west-2.ssm",
+    "com.amazonaws.eu-west-2.ssmmessages",
+    "com.amazonaws.eu-west-2.ec2messages",
+    "com.amazonaws.eu-west-2.ec2",
+    "com.amazonaws.eu-west-2.codebuild",
+    "com.amazonaws.eu-west-2.codepipeline",
+    "com.amazonaws.eu-west-2.servicecatalog",
+    "com.amazonaws.eu-west-2.cloudformation",
+    "com.amazonaws.eu-west-2.logs",
+    "com.amazonaws.eu-west-2.events",
+    "com.amazonaws.eu-west-2.lambda",
+    "com.amazonaws.eu-west-2.sns",
+    "com.amazonaws.eu-west-2.sqs",
+    "com.amazonaws.eu-west-2.kms",
+    "com.amazonaws.eu-west-2.secretsmanager"
+  ]
+
+  share_transit_gateway = true
+  ram_principals        = var.it_org_units
+  enable_vpc_flow_logs  = true
+  vpn_ecmp_support      = false
+
+
+  dr_enabled = var.dr_enabled
+
+  # Placeholder DR values for testing only
+  # dr_spoke_network_cidr = [var.it_spokes_supernet_dr_cidr]
+  # dr_vpc_cidr           = "10.233.0.0/22"
+  # dr_availability_zones = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+  #
+  # dr_firewall_subnet_cidrs       = ["10.233.0.128/28", "10.233.1.128/28", "10.233.2.128/28"]
+  # dr_tgw_attachment_subnet_cidrs = ["10.233.0.144/28", "10.233.1.144/28", "10.233.2.144/28"]
+  # dr_egress_subnet_cidrs         = ["10.233.0.160/28", "10.233.1.160/28", "10.233.2.160/28"]
+  # dr_endpoint_subnet_cidrs       = ["10.233.0.0/25", "10.233.1.0/25", "10.233.2.0/25"]
+  # dr_endpoints = [
+  #   "com.amazonaws.eu-west-1.s3",
+  #   "com.amazonaws.eu-west-1.dynamodb",
+  #   "com.amazonaws.eu-west-1.sts",
+  #   "com.amazonaws.eu-west-1.kms"
+  # ]
+
+  tags = {
+    Project = "core-network"
+  }
+}
+
+module "ot_network" {
+  source = "git::https://severntrent@dev.azure.com/severntrent/aws/_git/core-network-tf-module?ref=v1.0.2"
+
+  name               = var.ot_prefix
+  environment        = "prod"
+  primary_region     = var.primary_region
+  encryption_key_arn = data.aws_kms_alias.primary.target_key_arn
+  secondary_region   = var.secondary_region
+
+  spoke_network_cidr = [var.ot_spokes_supernet_cidr]
+  vpc_cidr           = "10.232.128.0/22"
+  availability_zones = ["eu-west-2a", "eu-west-2b", "eu-west-2c"]
+
+  firewall_subnet_cidrs       = ["10.232.128.128/28", "10.232.129.128/28", "10.232.130.128/28"]
+  tgw_attachment_subnet_cidrs = ["10.232.128.144/28", "10.232.129.144/28", "10.232.130.144/28"]
+  egress_subnet_cidrs         = ["10.232.128.160/28", "10.232.129.160/28", "10.232.130.160/28"]
+  endpoint_subnet_cidrs       = ["10.232.128.0/25", "10.232.129.0/25", "10.232.130.0/25"]
+
+  endpoints = [
+    "com.amazonaws.eu-west-2.s3",
+    "com.amazonaws.eu-west-2.dynamodb",
+    "com.amazonaws.eu-west-2.sts",
+    "com.amazonaws.eu-west-2.kms"
+  ]
+
+  share_transit_gateway = true
+  ram_principals        = var.ot_org_units
+  enable_vpc_flow_logs  = false
+  vpn_ecmp_support      = false
+  amazon_side_asn       = 64612
+
+  dr_enabled = var.dr_enabled
+
+  # DR values
+  # dr_spoke_network_cidr = [var.ot_spokes_supernet_dr_cidr]
+  # dr_vpc_cidr           = "10.233.128.0/22"
+  # dr_availability_zones = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+  #
+  # dr_firewall_subnet_cidrs       = ["10.233.128.128/28", "10.233.129.128/28", "10.233.130.128/28"]
+  # dr_tgw_attachment_subnet_cidrs = ["10.233.128.144/28", "10.233.129.144/28", "10.233.130.144/28"]
+  # dr_egress_subnet_cidrs         = ["10.233.128.160/28", "10.233.129.160/28", "10.233.130.160/28"]
+  # dr_endpoint_subnet_cidrs       = ["10.233.128.0/25", "10.233.129.0/25", "10.233.130.0/25"]
+  # dr_endpoints = [
+  #   "com.amazonaws.eu-west-1.s3",
+  #   "com.amazonaws.eu-west-1.dynamodb",
+  #   "com.amazonaws.eu-west-1.sts",
+  #   "com.amazonaws.eu-west-1.kms"
+  # ]
+
+  tags = {
+    Project = "core-network"
+  }
+}
