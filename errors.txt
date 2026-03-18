@@ -260,3 +260,19 @@ module "ot_network" {
     Project = "core-network"
   }
 }
+
+
+error
+
+/usr/bin/bash --noprofile --norc /home/vsts/work/_temp/0c5d7080-e2b8-4f54-9368-98fb751c4d1e.sh
+╷
+│ Error: Unsupported argument
+│ 
+│   on main.tf line 44, in module "it_network":
+│   44:   vpn_ecmp_support      = "disable"
+│ 
+│ An argument named "vpn_ecmp_support" is not expected here.
+╵
+
+##[error]Bash exited with code '1'.
+Finishing: Terraform Plan
