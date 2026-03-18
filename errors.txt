@@ -3,7 +3,7 @@
 │ Error: Unsupported argument
 │ 
 │   on main.tf line 44, in module "it_network":
-│   44:   vpn_ecmp_support      = false
+│   44:   vpn_ecmp_support      = "disable"
 │ 
 │ An argument named "vpn_ecmp_support" is not expected here.
 ╵
@@ -50,7 +50,7 @@ module "it_network" {
   share_transit_gateway = true
   ram_principals        = var.it_org_units
   enable_vpc_flow_logs  = true
-  vpn_ecmp_support      = false
+  vpn_ecmp_support      = "disable"
 
 
   dr_enabled = var.dr_enabled
